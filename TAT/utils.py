@@ -15,7 +15,7 @@ from pathlib import Path
 from torch_geometric.data import Data
 from torch_geometric.data import DataLoader
 from torch.utils.data import Dataset
-from torch_geometric.data.dataloader import Collater
+from torch_geometric.loader.dataloader import Collater
 
 
 def expand_edge_index_and_timestamps(edge_index: List, timestamps: List, set_indice: List) -> Union[np.array, np.array]:
