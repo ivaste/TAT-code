@@ -8,4 +8,4 @@
 #SBATCH --mem 30G
 #SBATCH --gres=gpu:1
 
-srun singularity exec --nv --home /nfsd/VFdisk/ivancichst/provaJobs/singu/TAT-code ../ubu-tat-GPU-CU102.sif python3 checkgpu.py
+srun singularity exec --nv --home /nfsd/VFdisk/ivancichst/thesis/TAT-code ../ubu-tat-GPU-CU102.sif python3 checkgpu.py
