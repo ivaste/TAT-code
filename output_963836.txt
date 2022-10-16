@@ -1,0 +1,2 @@
+cached dataset /nfsd/VFdisk/ivancichst/thesis/TAT-code/TAT/data/CollegeMsg/cached loaded.
+Train size: 3426, val size: 428, test size: 429, val_test ratio: 0.2

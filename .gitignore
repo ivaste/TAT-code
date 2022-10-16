@@ -3,3 +3,5 @@
 TAT/data/*/
 TAT/__pycache__/
 TAT/checkpoint/
+*.sif
+.nv/

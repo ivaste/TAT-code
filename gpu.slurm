@@ -8,5 +8,5 @@
 #SBATCH --mem 30G
 #SBATCH --gres=gpu:rtx:1
 
-srun singularity exec --nv --home /nfsd/VFdisk/ivancichst/provaJobs/singu/TAT-code ../ubu-tat-GPU-CU102.sif python3 -m TAT.main --dataset CollegeMsg --model TAT --gpu 0
+srun singularity exec --nv --home /nfsd/VFdisk/ivancichst/thesis/TAT-code ../ubu-tat-GPU-CU102.sif python3 -m TAT.main --dataset CollegeMsg --model TAT --gpu 0
 
