@@ -1,0 +1,8 @@
+Using device: cuda
+
+NVIDIA TITAN RTX
+Memory Usage:
+Allocated: 0.0 GB
+Cached:    0.0 GB
+E _CudaDeviceProperties(name='NVIDIA TITAN RTX', major=7, minor=5, total_memory=24220MB, multi_processor_count=72)
+F tensor([1., 2.], device='cuda:0')

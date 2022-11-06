@@ -1,6 +1,0 @@
-Cached directory /nfsd/VFdisk/ivancichst/thesis/TAT-code/TAT/data/CollegeMsg/cached newly created
-generating data samples...
-Generating train/test set indices and labels from graph...
-# triads: 7159, # wedges: 356462
-Generated 7159 train+test instances in total.
-Extracting subgraphs and encoding...(parallel: False)

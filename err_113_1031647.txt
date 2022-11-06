@@ -1,0 +1,23 @@
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/runpy.py", line 193, in _run_module_as_main
+    "__main__", mod_spec)
+  File "/usr/local/lib/python3.7/runpy.py", line 85, in _run_code
+    exec(code, run_globals)
+  File "/nfsd/VFdisk/ivancichst/thesis/TAT-code/TAT/main.py", line 11, in <module>
+    from . import utils
+  File "/nfsd/VFdisk/ivancichst/thesis/TAT-code/TAT/utils.py", line 15, in <module>
+    from torch_geometric.data import Data
+  File "/usr/local/lib/python3.7/site-packages/torch_geometric/__init__.py", line 4, in <module>
+    import torch_geometric.data
+  File "/usr/local/lib/python3.7/site-packages/torch_geometric/data/__init__.py", line 1, in <module>
+    from .data import Data
+  File "/usr/local/lib/python3.7/site-packages/torch_geometric/data/data.py", line 9, in <module>
+    from torch_sparse import SparseTensor
+  File "/usr/local/lib/python3.7/site-packages/torch_sparse/__init__.py", line 19, in <module>
+    torch.ops.load_library(spec.origin)
+  File "/usr/local/lib/python3.7/site-packages/torch/_ops.py", line 255, in load_library
+    ctypes.CDLL(path)
+  File "/usr/local/lib/python3.7/ctypes/__init__.py", line 364, in __init__
+    self._handle = _dlopen(self._name, mode)
+OSError: libcusparse.so.11: cannot open shared object file: No such file or directory
+srun: error: gpu2: task 0: Exited with exit code 1

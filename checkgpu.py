@@ -10,3 +10,6 @@ if device.type == 'cuda':
     print('Memory Usage:')
     print('Allocated:', round(torch.cuda.memory_allocated(0)/1024**3,1), 'GB')
     print('Cached:   ', round(torch.cuda.memory_reserved(0)/1024**3,1), 'GB')
+
+print('E', torch.cuda.get_device_properties(device))
+print('F', torch.tensor([1.0, 2.0]).cuda())
