@@ -8,4 +8,4 @@
 #SBATCH --mem 30G
 
 
-srun singularity exec --home /nfsd/VFdisk/ivancichst/thesis/TAT-code ../ubu-tat-GPU-CU102.sif python3 -m TAT.preprocessing --dataset emailEuCoreTemporal
+srun singularity exec --home /nfsd/VFdisk/ivancichst/thesis/TAT-code ../ubu-tat-GPU-CU102.sif python3 -m TAT.preprocessing --dataset CollegeMsg

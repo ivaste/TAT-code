@@ -214,6 +214,10 @@ def split_datalist(data_list, train_num):
 
 def determine_triad_class(G, set_indice):
     n1, n2, n3 = set_indice
+
+    if G.has_edge(n1,n2) + G.has_edge(n1,n3) + G.has_edge(n2,n3)<3:
+        return 6
+
     t_12 = min(G[n1][n2]['timestamp']) 
     t_13 = min(G[n1][n3]['timestamp'])
     t_23 = min(G[n2][n3]['timestamp'])
@@ -312,7 +316,92 @@ def permute(set_indices, labels):
     labels = labels[permutation]
     return set_indices, labels
 
-def generate_set_indices(G, test_ratio=0.2):
+def get_hop_num(prop_depth, layers, max_sp):
+    return int(prop_depth * layers)
+
+def k_hop_neighbors(G, set_indice, k):
+    """Return the neighbors in k-hop of the node(s)
+    set_indices: the central node set
+    """
+    neighbors = set(copy.copy(set_indice))
+    current_neighbors = set(copy.copy(set_indice))
+    for i in range(k):
+        next_hop_neighbors = []
+        for n in current_neighbors:
+            next_hop_neighbors.extend(list(G.neighbors(n)))
+        next_hop_neighbors = set(next_hop_neighbors) - neighbors
+        neighbors = neighbors.union(next_hop_neighbors)
+        current_neighbors = next_hop_neighbors
+    neighbors = list(neighbors)
+    return neighbors
+
+def collect_local_sets(G,k,tri_samples):
+    """
+    G: graph
+    k: hop
+    tri_samples: list of triangles 
+
+    New class will have len(tri_samples)//6 examples
+    balanced in 1/3 0-edges, 1/3 1-edges, 1/3 2-edges
+
+    for each node:
+        pick k_hop
+        pick all possible choiche of 3 nodes
+        if they have all 3 edges:discard
+        otherwise add to list, untill lists are full
+    """
+    
+    print("computing localset...\n")
+    
+    # compute how many examples we need
+    tot_needed = len(tri_samples)//6
+    tot_0_edges_needed = tot_needed//3
+    tot_1_edges_needed = tot_needed//3
+    tot_2_edges_needed = tot_needed//3
+
+    local_sets = set()
+
+    for node in G:
+        set_indice = [node,]
+        neighboorhood = k_hop_neighbors(G,set_indice,k)
+        
+        for node1 in neighboorhood:
+            if tot_0_edges_needed + tot_1_edges_needed + tot_2_edges_needed == 0: break
+            for node2 in neighboorhood:
+                if node1==node2:continue
+                if tot_0_edges_needed + tot_1_edges_needed + tot_2_edges_needed == 0: break
+                for node3 in neighboorhood:
+                    if node3==node1 or node3==node2: continue
+                    
+                    if tot_0_edges_needed + tot_1_edges_needed + tot_2_edges_needed == 0: break
+                    
+                    num_edges = G.has_edge(node1, node2) + G.has_edge(node1, node3) + G.has_edge(node2, node3)
+                    
+                    if num_edges == 3: continue
+                    
+                    if num_edges == 0:
+                        if tot_0_edges_needed>0:
+                            tot_0_edges_needed-=1
+                        else: continue
+                    
+                    if num_edges == 1:
+                        if tot_1_edges_needed>0:
+                            tot_1_edges_needed-=1
+                        else: continue
+                    
+                    if num_edges == 2:
+                        if tot_2_edges_needed>0:
+                            tot_2_edges_needed-=1
+                        else: continue
+                    
+                    local_sets.add(frozenset([node1,node2,node3]))
+        
+    print("Computed localset,",len(local_sets),"examples") 
+    return np.array([list(tri_set) for tri_set in local_sets])
+
+
+
+def generate_set_indices(G, prop_depth, layers, max_sp, test_ratio=0.2):
     """Generate set indeces, which are used for training/test target sets. But no labels now.
     # only triad prediction, 6 classes.
     """
@@ -320,7 +409,12 @@ def generate_set_indices(G, test_ratio=0.2):
 
     tri_samples, wedge_samples, neg_samples = sample_tri_wedge_neg_sets(G)
 
-    set_indices = tri_samples
+    hop_num = get_hop_num(prop_depth, layers, max_sp)
+    local_samples = collect_local_sets(G, hop_num, tri_samples)
+
+    #set_indices = tri_samples
+
+    set_indices = np.concatenate((tri_samples,local_samples))
 
     permutation = np.random.permutation(len(set_indices))
     set_indices = set_indices[permutation] # permute
@@ -338,11 +432,6 @@ def generate_set_indices(G, test_ratio=0.2):
     print('Generated {} train+test instances in total.'.format(len(set_indices)))
 
     return G, set_indices, labels, train_num
-
-
-def get_hop_num(prop_depth, layers, max_sp):
-    return int(prop_depth * layers)
-
 
 def extract_subgraph(G, set_indices, labels, prop_depth, layers, max_sp, parallel, cached_dir):
     print("Extracting subgraphs and encoding...(parallel: {})".format(parallel))
@@ -379,22 +468,6 @@ def save_datalist(data_list, args, logger):
         pickle.dump(data_list, f)
     logger.info("dataset {} cached at {}.".format(args.dataset, filedir))
 
-def k_hop_neighbors(G, set_indice, k):
-    """Return the neighbors in k-hop of the node(s)
-    set_indices: the central node set
-    """
-    neighbors = set(copy.copy(set_indice))
-    current_neighbors = set(copy.copy(set_indice))
-    for i in range(k):
-        next_hop_neighbors = []
-        for n in current_neighbors:
-            next_hop_neighbors.extend(list(G.neighbors(n)))
-        next_hop_neighbors = set(next_hop_neighbors) - neighbors
-        neighbors = neighbors.union(next_hop_neighbors)
-        current_neighbors = next_hop_neighbors
-    neighbors = list(neighbors)
-    return neighbors
-
 def onehot_encoding(indexs, n):
     """ convert integer indexs to one-hot encodings """
     assert max(indexs) <= n-1, "index out of range"
@@ -413,6 +486,7 @@ def remove_new_edges(sub_G, set_indice):
         if sub_G.has_edge(u, v):
             latest_timestamp.extend(sub_G[u][v]['timestamp'])
     # import ipdb; ipdb.set_trace()
+    if len(latest_timestamp)==0: return sub_G   #TODO why when addint my new examples this case happens?
     assert len(latest_timestamp) > 0
     latest_timestamp = np.min(latest_timestamp)
     assert isinstance(latest_timestamp, float), 'it must be a single float number, but got a {}'.format(type(latest_timestamp))
@@ -487,7 +561,7 @@ def preprocessing_cached_data(dataset, args, force_cache=True): # TODO: move to 
         print('Cached directory {} newly created'.format(cached_dir.absolute()))
         print('generating data samples...')
 
-        G, set_indices, labels, train_num = generate_set_indices(G, args.test_ratio)
+        G, set_indices, labels, train_num = generate_set_indices(G, args.prop_depth, args.layers, args.max_sp, args.test_ratio)
 
         data_list = extract_subgraph(G, set_indices, labels, args.prop_depth, args.layers, args.max_sp,
                                     False, cached_dir)
